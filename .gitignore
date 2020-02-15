@@ -2,9 +2,7 @@
 /node_modules
 
 # build artefacts
-/dist
-/src/site/_includes/css
-/src/site/_data/dev/*.json
+
 
 # secrets and errors
 .env
