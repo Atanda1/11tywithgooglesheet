@@ -1,63 +1,67 @@
-const axios  = require('axios');
-const seed   = require('../../../utils/save-seed.js');
+const fetch = require('node-fetch');
+const seed = require('../../../utils/save-seed.js');
 
 
-// Once a googel sheet is "published to the web" we can access its JSON
+// Once a google sheet is "published to the web" we can access its JSON
 // via a URL of this form. We just need to pass in the ID of the sheet
 // which we can find in the URL of the document.
 const sheetID = "1DpRZ4IA6Xd_rd4sNnkpuTkp_-6KOEJJWS-VqZxw4oU0";
-const googleSheetUrl = `https://spreadsheets.google.com/feeds/list/${sheetID}/od6/public/values?alt=json`;
+// You can get YOUR_API_KEY here https://developers.google.com/sheets/api/guides/migration#v3-api_1
+const API_KEY = "YOUR_API_KEY";
 
-module.exports = () => {
-  return new Promise((resolve, reject) => {
+const googleSheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}?fields=sheets.data.rowData.values.formattedValue&key=${API_KEY}`;
 
-    console.log(`Requesting data from ${googleSheetUrl}`);
+module.exports = async function() {
+  try {
+    let data = await (await fetch(googleSheetUrl)).json()
+    data = data.sheets[0].data[0].rowData
 
-    axios.get(googleSheetUrl)
-      .then(response => {
-        // massage the data from the Google Sheets API into
-        // a shape that will more convenient for us in our SSG.
-        var data = {
-          "content": []
-        };
-        response.data.feed.entry.forEach(item => {
-          data.content.push({
-            "header": item.gsx$header.$t,
-            "header2": item.gsx$header2.$t,
-            "body": item.gsx$body.$t,
-            "body2": item.gsx$body2.$t,
-            "body3":  item.gsx$body3.$t,
-            "body4": item.gsx$body4.$t,
-            "body5": item.gsx$body5.$t,
-            "body6":  item.gsx$body6.$t,
-            "body7": item.gsx$body7.$t,
-            "body8": item.gsx$body8.$t,
-            "body9":  item.gsx$body9.$t,
-            "body10": item.gsx$body10.$t,
-            "body11": item.gsx$body11.$t,
-            "body12":  item.gsx$body12.$t,
-            "body13": item.gsx$body13.$t,
-            "body14": item.gsx$body14.$t,
-            "body15":  item.gsx$body15.$t,
-            "body16": item.gsx$body16.$t,
-            "body17": item.gsx$body17.$t,
-            
-          })
-        });
+    let dataFormated = {
+      "content": []
+    }
 
-        // stash the data locally for developing without
-        // needing to hit the API each time.
-        seed(JSON.stringify(data), `${__dirname}/../dev/sheet.json`);
+    let i = 0
+    data.forEach(item => {
+      i += 1
+      if(i === 1) return
 
-        // resolve the promise and return the data
-        resolve(data);
+      let row = []
 
+      item.values.forEach(item => {
+        row.push(item.formattedValue)
       })
 
-      // uh-oh. Handle any errrors we might encounter
-      .catch(error => {
-        console.log('Error :', error);
-        reject(error);
-      });
-  })
+      dataFormated.content.push({
+        "header": row[0],
+        "header2": row[1],
+        "body": row[2],
+        "body2": row[3],
+        "body3":  row[4],
+        "body4": row[5],
+        "body5": row[6],
+        "body6":  row[7],
+        "body7": row[8],
+        "body8": row[9],
+        "body9":  row[10],
+        "body10": row[11],
+        "body11": row[12],
+        "body12":  row[13],
+        "body13": row[14],
+        "body14": row[15],
+        "body15":  row[16],
+        "body16": row[17],
+        "body17": row[18]
+      })
+    });
+
+    // stash the data locally for developing without
+    // needing to hit the API each time.
+    seed(JSON.stringify(dataFormated), `${__dirname}/../dev/sheet.json`);
+    
+    // resolve the promise and return the data
+    return dataFormated
+  } catch(e) {
+    console.log('Error :', e);
+    return e
+  }
 }
